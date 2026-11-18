@@ -1,0 +1,5 @@
+/config/db.php
+/uploads/assignments/*
+!/uploads/assignments/.gitkeep
+/uploads/submissions/*
+!/uploads/submissions/.gitkeep
