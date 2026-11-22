@@ -56,6 +56,16 @@ function lecturer_redirect(string $location): void
 function lecturer_page_start(string $title): void
 {
     $safeTitle = lecturer_h($title);
+    ob_start();
+    require __DIR__ . '/../includes/logout_button.php';
+    $logoutButton = ob_get_clean();
+    $current  = basename((string) ($_SERVER['PHP_SELF'] ?? ''));
+    $aDash    = $current === 'dashboard.php' ? 'active' : '';
+    $aAssign  = in_array($current, ['manage_assignments.php', 'create_assignment.php', 'view_submissions.php'], true) ? 'active' : '';
+    $aTrack   = $current === 'tracking.php' ? 'active' : '';
+    $aCourses = $current === 'manage_courses.php' ? 'active' : '';
+    $userName = lecturer_h((string) ($_SESSION['user']['full_name'] ?? 'Lecturer'));
+
     echo <<<HTML
 <!doctype html>
 <html lang="en">
@@ -64,17 +74,28 @@ function lecturer_page_start(string $title): void
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{$safeTitle} | ASATS Lecturer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="../assets/css/lecturer.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a class="navbar-brand" href="dashboard.php">ASATS Lecturer</a>
-        <div class="navbar-nav">
-            <a class="nav-link" href="dashboard.php">Dashboard</a>
-            <a class="nav-link" href="manage_assignments.php">Assignments</a>
+<header class="lt-header">
+    <div class="lt-inner">
+        <a class="lt-brand" href="dashboard.php">
+            <span class="lt-mark"><i></i><i></i><i></i></span>
+            ASATS <small>Lecturer</small>
+        </a>
+        <nav class="lt-links" aria-label="Lecturer navigation">
+            <a class="{$aDash}" href="dashboard.php">Dashboard</a>
+            <a class="{$aAssign}" href="manage_assignments.php">Assignments</a>
+            <a class="{$aCourses}" href="manage_courses.php">Courses</a>
+            <a class="{$aTrack}" href="tracking.php">Submission tracking</a>
+        </nav>
+        <div class="lt-user">
+            <span>{$userName}</span>
+            {$logoutButton}
         </div>
     </div>
-</nav>
+</header>
 <main class="container py-4">
 HTML;
 }

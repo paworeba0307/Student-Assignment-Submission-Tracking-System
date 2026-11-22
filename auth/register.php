@@ -81,66 +81,115 @@ $message = flash();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Create account | ASATS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="<?= e(app_url('assets/css/auth.css')) ?>" rel="stylesheet">
 </head>
-<body class="bg-light">
-<main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <section class="card shadow-sm">
-                <div class="card-body p-4 p-md-5">
-                    <h1 class="h3 mb-2">Create a student account</h1>
-                    <p class="text-secondary mb-4">Register to view and submit your course assignments.</p>
+<body class="auth-body">
+<div class="auth-shell">
 
-                    <?php if ($message): ?>
-                        <div class="alert alert-<?= e((string) $message['type']) ?>" role="alert">
-                            <?= e((string) $message['message']) ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($errors): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <ul class="mb-0">
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?= e($error) ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
-
-                    <form method="post" action="<?= e(app_url('auth/register.php')) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                        <div class="mb-3">
-                            <label class="form-label" for="full_name">Full name</label>
-                            <input class="form-control" id="full_name" name="full_name" type="text"
-                                   maxlength="100" autocomplete="name" required value="<?= e($fullName) ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="email">Email address</label>
-                            <input class="form-control" id="email" name="email" type="email"
-                                   maxlength="254" autocomplete="email" required value="<?= e($email) ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="password">Password</label>
-                            <input class="form-control" id="password" name="password" type="password"
-                                   minlength="8" maxlength="72" autocomplete="new-password" required>
-                            <div class="form-text">Use 8 to 72 bytes.</div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label" for="password_confirmation">Confirm password</label>
-                            <input class="form-control" id="password_confirmation" name="password_confirmation"
-                                   type="password" minlength="8" maxlength="72" autocomplete="new-password" required>
-                        </div>
-                        <button class="btn btn-primary w-100" type="submit">Create account</button>
-                    </form>
-
-                    <p class="mt-4 mb-0 text-center">
-                        Already registered? <a href="<?= e(app_url('auth/login.php')) ?>">Log in</a>
-                    </p>
-                </div>
-            </section>
+    <aside class="auth-side">
+        <div class="auth-brand">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            ASATS
         </div>
-    </div>
-</main>
+
+        <div class="auth-pitch">
+            <h2>Join your courses and never miss a deadline.</h2>
+            <p>Create a student account to see the assignments your lecturers publish and submit your work online.</p>
+            <ul class="auth-points">
+                <li><span class="dot">&#10003;</span> See new assignments as soon as they are published</li>
+                <li><span class="dot">&#10003;</span> Submit files before the due date</li>
+                <li><span class="dot">&#10003;</span> Check what is pending, submitted or overdue</li>
+            </ul>
+        </div>
+
+        <div class="auth-foot">Student Assignment Submission and Tracking System</div>
+    </aside>
+
+    <main class="auth-main">
+        <section class="auth-card">
+            <div class="auth-mobile-brand">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                ASATS
+            </div>
+
+            <h1>Create your account</h1>
+            <p class="sub">Register as a student. It takes under a minute.</p>
+
+            <?php if ($message): ?>
+                <div class="auth-alert <?= e((string) $message['type']) ?>" role="alert">
+                    <?= e((string) $message['message']) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($errors): ?>
+                <div class="auth-alert danger" role="alert">
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= e($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="<?= e(app_url('auth/register.php')) ?>">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
+                <div class="field">
+                    <label for="full_name">Full name</label>
+                    <input id="full_name" name="full_name" type="text" maxlength="100"
+                           autocomplete="name" placeholder="Your full name"
+                           required value="<?= e($fullName) ?>">
+                </div>
+
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email" maxlength="254"
+                           autocomplete="email" placeholder="you@university.ac"
+                           required value="<?= e($email) ?>">
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="pw-wrap">
+                        <input id="password" name="password" type="password" minlength="8" maxlength="72"
+                               autocomplete="new-password" placeholder="Create a password" required>
+                        <button class="pw-toggle" type="button" data-target="password">Show</button>
+                    </div>
+                    <div class="hint">Use 8 to 72 characters.</div>
+                </div>
+
+                <div class="field">
+                    <label for="password_confirmation">Confirm password</label>
+                    <div class="pw-wrap">
+                        <input id="password_confirmation" name="password_confirmation" type="password"
+                               minlength="8" maxlength="72" autocomplete="new-password"
+                               placeholder="Repeat your password" required>
+                        <button class="pw-toggle" type="button" data-target="password_confirmation">Show</button>
+                    </div>
+                </div>
+
+                <button class="btn-auth" type="submit">Create account</button>
+            </form>
+
+            <p class="auth-alt">
+                Already registered? <a href="<?= e(app_url('auth/login.php')) ?>">Log in</a>
+            </p>
+        </section>
+    </main>
+
+</div>
+<script>
+    document.querySelectorAll('.pw-toggle').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = document.getElementById(button.getAttribute('data-target'));
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.textContent = show ? 'Hide' : 'Show';
+        });
+    });
+</script>
 </body>
-</html>
+</html> 

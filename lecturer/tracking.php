@@ -1,45 +1,34 @@
 <?php
 declare(strict_types=1);
-if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-if (empty($_SESSION['user']) || $_SESSION['user']['role'] !== 'lecturer') {
-    header('Location: ../index.php'); exit;
-}
-$pageTitle  = 'Submission Tracking — ASATS';
-require __DIR__ . '/../includes/header.php';
-require __DIR__ . '/../includes/database.php';
 
-$lecturerId = (int)($_SESSION['user']['id'] ?? 0);
-$matrix = [];
-$pdo = getDatabase();
-if ($pdo) {
-    try {
-        $stmt = $pdo->prepare(
-            'SELECT a.id AS aid, a.title, a.due_date,
-                    u.id AS uid, u.name AS uname, u.email AS uemail,
-                    s.id AS sid, s.file_name, s.submitted_at
-             FROM assignments AS a
-             CROSS JOIN users AS u
-             LEFT JOIN submissions AS s ON s.assignment_id = a.id AND s.student_id = u.id
-             WHERE a.lecturer_id = :lid AND u.role = \'student\'
-             ORDER BY a.due_date ASC, u.name ASC'
-        );
-        $stmt->execute(['lid' => $lecturerId]);
-        $matrix = $stmt->fetchAll();
-    } catch (Throwable) {}
-}
-if (!$matrix) {
-    $n = time();
-    $matrix = [
-        ['aid'=>1,'title'=>'Database Design Project',   'due_date'=>date('Y-m-d H:i:s',$n-86400),   'uid'=>10,'uname'=>'Alice Mokoena', 'uemail'=>'alice@demo.ac', 'sid'=>1,   'file_name'=>'db-design.pdf',   'submitted_at'=>date('Y-m-d H:i:s',$n-2*86400)],
-        ['aid'=>1,'title'=>'Database Design Project',   'due_date'=>date('Y-m-d H:i:s',$n-86400),   'uid'=>11,'uname'=>'Brian Dlamini','uemail'=>'brian@demo.ac', 'sid'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['aid'=>1,'title'=>'Database Design Project',   'due_date'=>date('Y-m-d H:i:s',$n-86400),   'uid'=>12,'uname'=>'Carla Nkosi',  'uemail'=>'carla@demo.ac', 'sid'=>3,   'file_name'=>'db-design-v2.pdf','submitted_at'=>date('Y-m-d H:i:s',$n-3*86400)],
-        ['aid'=>2,'title'=>'Responsive UI Prototype',   'due_date'=>date('Y-m-d H:i:s',$n+4*86400), 'uid'=>10,'uname'=>'Alice Mokoena', 'uemail'=>'alice@demo.ac', 'sid'=>4,   'file_name'=>'ui-proto.zip',    'submitted_at'=>date('Y-m-d H:i:s',$n-86400)],
-        ['aid'=>2,'title'=>'Responsive UI Prototype',   'due_date'=>date('Y-m-d H:i:s',$n+4*86400), 'uid'=>11,'uname'=>'Brian Dlamini','uemail'=>'brian@demo.ac', 'sid'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['aid'=>2,'title'=>'Responsive UI Prototype',   'due_date'=>date('Y-m-d H:i:s',$n+4*86400), 'uid'=>12,'uname'=>'Carla Nkosi',  'uemail'=>'carla@demo.ac', 'sid'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['aid'=>3,'title'=>'Software Engineering Report','due_date'=>date('Y-m-d H:i:s',$n+8*86400),'uid'=>10,'uname'=>'Alice Mokoena', 'uemail'=>'alice@demo.ac', 'sid'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['aid'=>3,'title'=>'Software Engineering Report','due_date'=>date('Y-m-d H:i:s',$n+8*86400),'uid'=>11,'uname'=>'Brian Dlamini','uemail'=>'brian@demo.ac', 'sid'=>7,   'file_name'=>'se-report.docx',  'submitted_at'=>date('Y-m-d H:i:s',$n-86400)],
-        ['aid'=>3,'title'=>'Software Engineering Report','due_date'=>date('Y-m-d H:i:s',$n+8*86400),'uid'=>12,'uname'=>'Carla Nkosi',  'uemail'=>'carla@demo.ac', 'sid'=>null,'file_name'=>null,              'submitted_at'=>null],
-    ];
+require_once __DIR__ . '/../includes/auth.php';
+require_role('lecturer');
+require_once __DIR__ . '/../config/db.php';
+
+$pageTitle = 'Submission Tracking — ASATS';
+require __DIR__ . '/../includes/header.php';
+
+$lecturerId = (int) $_SESSION['user']['id'];
+
+$stmt = $pdo->prepare(
+    'SELECT a.id AS aid, a.title, a.due_date,
+            u.id AS uid, u.full_name AS uname, u.email AS uemail,
+            s.id AS sid, s.file_path AS file_name, s.submitted_at
+     FROM assignments a
+     INNER JOIN enrollments e ON e.course_id = a.course_id
+     INNER JOIN users u ON u.id = e.student_id AND u.role = \'student\'
+     LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = u.id
+     WHERE a.lecturer_id = :lid AND a.status = \'published\'
+     ORDER BY a.due_date ASC, u.full_name ASC'
+);
+$stmt->execute(['lid' => $lecturerId]);
+$matrix = $stmt->fetchAll();
+function track_file_label(string $student, string $title, string $stored): string
+{
+    $ext  = strtolower(pathinfo($stored, PATHINFO_EXTENSION));
+    $base = trim((string) preg_replace('/[^A-Za-z0-9]+/', '_', $student . ' ' . $title), '_');
+    $base = substr($base !== '' ? $base : 'submission', 0, 60);
+    return $ext !== '' ? $base . '.' . $ext : $base;
 }
 $byAssignment = [];
 $totalSubs    = 0;
@@ -164,13 +153,14 @@ $totalPending  = count($matrix) - $totalSubs;
                   <?php endif; ?>
                 </td>
                 <td>
-                  <?php if (!empty($r['file_name'])): ?>
-                    <a class="act-link" href="javascript:void(0)"
-                       title="<?= htmlspecialchars((string)$r['file_name']) ?>">
+                    <?php if (!empty($r['file_name'])): ?>
+                    <?php $fileLabel = track_file_label((string) $r['uname'], (string) ($r['title'] ?? ''), (string) $r['file_name']); ?>
+                    <a class="act-link" href="download_submission.php?id=<?= (int) $r['sid'] ?>"
+                       title="Download <?= htmlspecialchars($fileLabel) ?>">
                       <svg width="12" height="12" fill="none" viewBox="0 0 12 12" aria-hidden="true">
                         <path d="M6 1v7M3 5.5l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
-                      <?= htmlspecialchars((string)$r['file_name']) ?>
+                      <?= htmlspecialchars($fileLabel) ?>
                     </a>
                   <?php else: ?>
                     <span class="no-data">—</span>

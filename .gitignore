@@ -3,3 +3,8 @@
 !/uploads/assignments/.gitkeep
 /uploads/submissions/*
 !/uploads/submissions/.gitkeep
+
+config/db.php
+uploads/assignments/*
+uploads/submissions/*
+*.bak

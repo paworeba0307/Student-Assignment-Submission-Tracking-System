@@ -51,49 +51,91 @@ $message = flash();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Log in | ASATS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="<?= e(app_url('assets/css/auth.css')) ?>" rel="stylesheet">
 </head>
-<body class="bg-light">
-<main class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-5">
-            <section class="card shadow-sm">
-                <div class="card-body p-4 p-md-5">
-                    <h1 class="h3 mb-2">Log in to ASATS</h1>
-                    <p class="text-secondary mb-4">Use your student or lecturer account.</p>
+<body class="auth-body">
+<div class="auth-shell">
 
-                    <?php if ($message): ?>
-                        <div class="alert alert-<?= e((string) $message['type']) ?>" role="alert">
-                            <?= e((string) $message['message']) ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($error): ?>
-                        <div class="alert alert-danger" role="alert"><?= e($error) ?></div>
-                    <?php endif; ?>
-
-                    <form method="post" action="<?= e(app_url('auth/login.php')) ?>">
-                        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                        <div class="mb-3">
-                            <label class="form-label" for="email">Email address</label>
-                            <input class="form-control" id="email" name="email" type="email"
-                                   maxlength="254" autocomplete="username" required value="<?= e($email) ?>">
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label" for="password">Password</label>
-                            <input class="form-control" id="password" name="password" type="password"
-                                   autocomplete="current-password" required>
-                        </div>
-                        <button class="btn btn-primary w-100" type="submit">Log in</button>
-                    </form>
-
-                    <p class="mt-4 mb-0 text-center">
-                        Need a student account? <a href="<?= e(app_url('auth/register.php')) ?>">Register</a>
-                    </p>
-                </div>
-            </section>
+    <aside class="auth-side">
+        <div class="auth-brand">
+            <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+            ASATS
         </div>
-    </div>
-</main>
+
+        <div class="auth-pitch">
+            <h2>Assignments, submitted and tracked in one place.</h2>
+            <p>Lecturers publish work and see who has handed in. Students see what is due and submit before the deadline.</p>
+            <ul class="auth-points">
+                <li><span class="dot">&#10003;</span> Publish assignments to your enrolled students</li>
+                <li><span class="dot">&#10003;</span> Upload your work and get a clear submitted status</li>
+                <li><span class="dot">&#10003;</span> Track pending, submitted and overdue work</li>
+            </ul>
+        </div>
+
+        <div class="auth-foot">Student Assignment Submission and Tracking System</div>
+    </aside>
+
+    <main class="auth-main">
+        <section class="auth-card">
+            <div class="auth-mobile-brand">
+                <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                ASATS
+            </div>
+
+            <h1>Welcome back</h1>
+            <p class="sub">Log in with your student or lecturer account.</p>
+
+            <?php if ($message): ?>
+                <div class="auth-alert <?= e((string) $message['type']) ?>" role="alert">
+                    <?= e((string) $message['message']) ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($error): ?>
+                <div class="auth-alert danger" role="alert"><?= e($error) ?></div>
+            <?php endif; ?>
+
+            <form method="post" action="<?= e(app_url('auth/login.php')) ?>">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email" maxlength="254"
+                           autocomplete="username" placeholder="you@university.ac"
+                           required value="<?= e($email) ?>">
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="pw-wrap">
+                        <input id="password" name="password" type="password"
+                               autocomplete="current-password" placeholder="Enter your password" required>
+                        <button class="pw-toggle" type="button" data-target="password">Show</button>
+                    </div>
+                </div>
+
+                <button class="btn-auth" type="submit">Log in</button>
+            </form>
+
+            <p class="auth-alt">
+                New here? <a href="<?= e(app_url('auth/register.php')) ?>">Create a student account</a>
+            </p>
+        </section>
+    </main>
+
+</div>
+<script>
+    document.querySelectorAll('.pw-toggle').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = document.getElementById(button.getAttribute('data-target'));
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.textContent = show ? 'Hide' : 'Show';
+        });
+    });
+</script>
 </body>
 </html>

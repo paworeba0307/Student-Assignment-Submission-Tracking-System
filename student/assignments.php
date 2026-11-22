@@ -38,7 +38,12 @@ $assignments = $assignmentsQuery->fetchAll(PDO::FETCH_ASSOC);
             <a class="btn btn-outline-primary" href="dashboard.php">Dashboard</a>
             <?php if (is_file(__DIR__ . '/my_submissions.php')): ?>
                 <a class="btn btn-outline-primary" href="my_submissions.php">My submissions</a>
-            <?php endif; ?>
+                    <?php endif; ?>
+        <form method="post" action="<?= e(app_url('auth/logout.php')) ?>" class="d-inline">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <button type="submit" class="btn btn-outline-danger">Log out</button>
+        </form>
+    </nav>
         </nav>
     </header>
 
@@ -90,7 +95,7 @@ $assignments = $assignmentsQuery->fetchAll(PDO::FETCH_ASSOC);
                         </td>
                         <td>
                             <a class="btn btn-sm btn-primary"
-                               href="submit_assignment.php?id=<?= rawurlencode((string) $assignment['id']) ?>">
+                              href="assignment_view.php?id=<?= rawurlencode((string) $assignment['id']) ?>">
                                 View / Submit
                             </a>
                         </td>

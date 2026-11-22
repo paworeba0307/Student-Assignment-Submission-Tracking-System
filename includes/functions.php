@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-
+date_default_timezone_set('Pacific/Port_Moresby');
 function e(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

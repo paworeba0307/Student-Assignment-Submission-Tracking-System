@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/auth.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -9,7 +10,10 @@ $basePath    = (str_contains($scriptName, '/student/')
              || str_contains($scriptName, '/lecturer/'))
              ? '../' : '';
 $userRole = $_SESSION['user']['role'] ?? null;
-$userName = $_SESSION['user']['name'] ?? null;
+$userName = $_SESSION['user']['full_name'] ?? $_SESSION['user']['name'] ?? null;
+$homeUrl = isset($_SESSION['user']['role'])
+    ? dashboard_url_for_role((string) $_SESSION['user']['role'])
+    : $basePath . 'index.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -33,30 +37,38 @@ $userName = $_SESSION['user']['name'] ?? null;
   <div class="inner">
 
     <!-- Brand -->
-    <a class="nav-brand" href="<?= $basePath ?>index.php" aria-label="ASATS home">
+    <a class="nav-brand" href="<?= e($homeUrl) ?>" aria-label="ASATS home">
       <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
       ASATS
     </a>
 
     <!-- Desktop links -->
     <nav class="nav-links" aria-label="Main">
-      <a class="nav-link-item <?= $currentPage === 'index.php' ? 'active' : '' ?>"
-         href="<?= $basePath ?>index.php">Home</a>
+        <a class="nav-link-item <?= in_array($currentPage, ['dashboard.php', 'index.php'], true) ? 'active' : '' ?>"
+        href="<?= e($homeUrl) ?>">Home</a>
 
-      <?php if ($userRole === 'lecturer'): ?>
-        <a class="nav-link-item <?= $currentPage === 'tracking.php' ? 'active' : '' ?>"
-           href="<?= $basePath ?>lecturer/tracking.php">Submission tracking</a>
-      <?php elseif ($userRole === 'student'): ?>
-        <a class="nav-link-item <?= $currentPage === 'my_submissions.php' ? 'active' : '' ?>"
-           href="<?= $basePath ?>student/my_submissions.php">My submissions</a>
-      <?php endif; ?>
-    </nav>
-
+<?php if ($userRole === 'lecturer'): ?>
+  <a class="nav-link-item <?= $currentPage === 'manage_courses.php' ? 'active' : '' ?>"
+   href="<?= $basePath ?>lecturer/manage_courses.php">Courses</a>
+  <a class="nav-link-item <?= $currentPage === 'manage_assignments.php' ? 'active' : '' ?>"
+     href="<?= $basePath ?>lecturer/manage_assignments.php">Assignments</a>
+  <a class="nav-link-item <?= $currentPage === 'tracking.php' ? 'active' : '' ?>"
+     href="<?= $basePath ?>lecturer/tracking.php">Submission tracking</a>
+<?php elseif ($userRole === 'student'): ?>
+  <a class="nav-link-item <?= $currentPage === 'assignments.php' ? 'active' : '' ?>"
+     href="<?= $basePath ?>student/assignments.php">Assignments</a>
+  <a class="nav-link-item <?= $currentPage === 'my_submissions.php' ? 'active' : '' ?>"
+     href="<?= $basePath ?>student/my_submissions.php">My submissions</a>
+<?php endif; ?>
+</nav>
     <!-- Desktop right side -->
     <div class="nav-right">
       <?php if ($userName): ?>
         <span class="nav-username"><?= htmlspecialchars($userName) ?></span>
-        <a class="pill pill-ghost" href="<?= $basePath ?>auth/logout.php">Log out</a>
+        <form method="post" action="<?= $basePath ?>auth/logout.php" style="display:inline">
+  <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+  <button class="pill pill-ghost" type="submit">Log out</button>
+</form>
       <?php else: ?>
         <a class="pill pill-ghost" href="<?= $basePath ?>auth/login.php">Log in</a>
         <a class="pill pill-solid" href="<?= $basePath ?>auth/register.php">Register</a>
@@ -76,13 +88,20 @@ $userName = $_SESSION['user']['name'] ?? null;
 
 <!-- Mobile nav panel (outside header so it doesn't affect header height) -->
 <div class="nav-panel" id="navPanel" aria-hidden="true">
-  <a href="<?= $basePath ?>index.php">Home</a>
-  <?php if ($userRole === 'lecturer'): ?>
+  <a href="<?= e($homeUrl) ?>">Home</a>
+  
+    <?php if ($userRole === 'lecturer'): ?>
+    <a href="<?= $basePath ?>lecturer/manage_courses.php">Courses</a>
+    <a href="<?= $basePath ?>lecturer/manage_assignments.php">Assignments</a>
     <a href="<?= $basePath ?>lecturer/tracking.php">Submission tracking</a>
   <?php elseif ($userRole === 'student'): ?>
+    <a href="<?= $basePath ?>student/assignments.php">Assignments</a>
     <a href="<?= $basePath ?>student/my_submissions.php">My submissions</a>
   <?php endif; ?>
-  <div class="sep"></div>
+  <form method="post" action="<?= $basePath ?>auth/logout.php" style="display:inline">
+  <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+  <button type="submit" style="background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer">Log out</button>
+</form>
   <?php if ($userName): ?>
     <a style="color:var(--ink-3)"><?= htmlspecialchars($userName) ?></a>
     <a href="<?= $basePath ?>auth/logout.php">Log out</a>

@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 }
                             }
 
-                            header('Location: submit_assignment.php?id=' . rawurlencode((string) $assignmentId) . '&submitted=1');
+                           header('Location: assignment_view.php?id=' . rawurlencode((string) $assignmentId) . '&submitted=1');
                             exit;
                         }
                     } catch (PDOException $exception) {

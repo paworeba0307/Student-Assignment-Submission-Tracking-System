@@ -80,7 +80,8 @@ if ($courseId !== null && !in_array($courseId, array_map(static function (array 
 
 $sql = 'SELECT a.id, a.title, a.description, a.due_date, a.status, a.attachment_path,
                c.course_code, c.course_name,
-               COUNT(DISTINCT s.id) AS submission_count
+        COUNT(DISTINCT s.id) AS submission_count,
+        (SELECT COUNT(*) FROM enrollments en WHERE en.course_id = a.course_id) AS student_count
         FROM assignments a
         JOIN courses c ON c.id = a.course_id
         LEFT JOIN submissions s ON s.assignment_id = a.id
@@ -142,7 +143,7 @@ lecturer_page_start('Manage assignments');
                         </td>
                         <td><?= lecturer_h($assignment['course_code']) ?></td>
                         <td><?= lecturer_h($assignment['due_date']) ?></td>
-                        <td><a href="view_submissions.php?id=<?= (int) $assignment['id'] ?>"><?= (int) $assignment['submission_count'] ?> / students</a></td>
+                       <td><a href="view_submissions.php?id=<?= (int) $assignment['id'] ?>"><?= (int) $assignment['submission_count'] ?> / <?= (int) $assignment['student_count'] ?> students</a></td>
                         <td><span class="badge text-bg-<?= $assignment['status'] === 'published' ? 'success' : 'secondary' ?>"><?= lecturer_h(ucfirst($assignment['status'])) ?></span></td>
                         <td>
                             <div class="d-flex flex-wrap gap-2">

@@ -1,34 +1,28 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__ . '/_bootstrap.php';   // login check, $pdo and $studentId
+
 $pageTitle = 'My Submissions — ASATS';
 require __DIR__ . '/../includes/header.php';
-require __DIR__ . '/../includes/database.php';
 
-$records = [];
-$pdo = getDatabase();
-if ($pdo) {
-    try {
-        $sid  = (int)($_SESSION['user']['id'] ?? 0);
-        $stmt = $pdo->prepare(
-            'SELECT a.id, a.title, a.description, a.due_date,
-                    s.id AS submission_id, s.file_name, s.submitted_at
-             FROM assignments AS a
-             LEFT JOIN submissions AS s ON s.assignment_id = a.id AND s.student_id = :sid
-             ORDER BY a.due_date ASC'
-        );
-        $stmt->execute(['sid' => $sid]);
-        $records = $stmt->fetchAll();
-    } catch (Throwable) {}
+$stmt = $pdo->prepare(
+    'SELECT a.id, a.title, a.due_date, c.course_code, c.course_name,
+            s.id AS submission_id, s.file_path AS file_name, s.submitted_at
+     FROM enrollments e
+     INNER JOIN assignments a ON a.course_id = e.course_id AND a.status = \'published\'
+     INNER JOIN courses c ON c.id = a.course_id
+     LEFT JOIN submissions s ON s.assignment_id = a.id AND s.student_id = e.student_id
+     WHERE e.student_id = :sid
+     ORDER BY a.due_date ASC'
+);
+$stmt->execute(['sid' => $studentId]);
+$records = $stmt->fetchAll();
+
+foreach ($records as &$r) {
+    $r['description'] = $r['course_code'] . ' · ' . $r['course_name'];
 }
-if (!$records) {
-    $n = time();
-    $records = [
-        ['id'=>1,'title'=>'Database Design Project',    'description'=>'ICT 301 · Project',    'due_date'=>date('Y-m-d H:i:s',$n+2*86400), 'submission_id'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['id'=>2,'title'=>'Responsive UI Prototype',    'description'=>'ICT 245 · Portfolio',  'due_date'=>date('Y-m-d H:i:s',$n+5*86400), 'submission_id'=>2,   'file_name'=>'ui-prototype.zip','submitted_at'=>date('Y-m-d H:i:s',$n-86400)],
-        ['id'=>3,'title'=>'Software Engineering Report','description'=>'SWE 210 · Report',     'due_date'=>date('Y-m-d H:i:s',$n-2*86400), 'submission_id'=>null,'file_name'=>null,              'submitted_at'=>null],
-        ['id'=>4,'title'=>'Network Security Quiz',      'description'=>'NET 220 · Assessment', 'due_date'=>date('Y-m-d H:i:s',$n+9*86400), 'submission_id'=>4,   'file_name'=>'security-quiz.pdf','submitted_at'=>date('Y-m-d H:i:s',$n-3*86400)],
-    ];
-}
+unset($r);
 
 $counts = ['total'=>count($records),'submitted'=>0,'pending'=>0,'overdue'=>0];
 $rows   = [];
@@ -50,11 +44,16 @@ $badges = ['submitted'=>'badge-sub','pending'=>'badge-pend','overdue'=>'badge-ov
 
 <main class="page-shell">
   <div class="site-wrap">
+  <?php if (isset($_GET['submitted'])): ?>
+  <div role="alert" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:12px;padding:12px 16px;margin:0 0 20px;font-weight:600;">
+    Your assignment was submitted successfully.
+  </div>
+<?php endif; ?>
 
     <div class="page-heading">
       <div>
         <ol class="breadcrumb-row" aria-label="Breadcrumb">
-          <li><a href="../index.php">Home</a></li>
+          <li><a href="<?= e($homeUrl) ?>">Home</a></li>
           <li aria-hidden="true"><svg width="10" height="10" fill="none" viewBox="0 0 10 10"><path d="M3.5 2l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></li>
           <li aria-current="page">My submissions</li>
         </ol>
@@ -140,13 +139,13 @@ $badges = ['submitted'=>'badge-sub','pending'=>'badge-pend','overdue'=>'badge-ov
                         aria-live="polite">Calculating…</span>
                 </td>
                 <td>
-                  <?php if ($s === 'submitted'): ?>
-                    <a class="act-link" href="javascript:void(0)"
+                                    <?php if ($s === 'submitted'): ?>
+                    <a class="act-link" href="assignment_view.php?id=<?= (int) $r['id'] ?>"
                        title="<?= htmlspecialchars((string)$r['file_name']) ?>">View file</a>
                   <?php elseif ($s === 'overdue'): ?>
-                    <span class="no-data">Contact lecturer</span>
+                    <a class="act-link" href="assignment_view.php?id=<?= (int) $r['id'] ?>">View details</a>
                   <?php else: ?>
-                    <a class="act-link" href="javascript:void(0)">
+                    <a class="act-link" href="assignment_view.php?id=<?= (int) $r['id'] ?>">
                       Submit now
                       <svg width="11" height="11" fill="none" viewBox="0 0 11 11" aria-hidden="true">
                         <path d="M2 5.5h7M6 3l3 2.5-3 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>

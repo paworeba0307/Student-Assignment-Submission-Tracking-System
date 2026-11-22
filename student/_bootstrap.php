@@ -15,7 +15,7 @@ if (!isset($pdo) || !$pdo instanceof PDO) {
     throw new RuntimeException('config/db.php must provide a PDO connection in $pdo.');
 }
 
-$studentId = filter_var($_SESSION['user_id'] ?? null, FILTER_VALIDATE_INT);
+$studentId = filter_var($_SESSION['user']['id'] ?? $_SESSION['user_id'] ?? null, FILTER_VALIDATE_INT);
 if (!$studentId || $studentId < 1) {
     http_response_code(403);
     exit('A valid student session is required.');
